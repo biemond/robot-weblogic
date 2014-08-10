@@ -1,0 +1,46 @@
+*** Settings ***
+Documentation     A resource file with reusable keywords and variables.
+...
+...               The system specific keywords created here form our own
+...               domain specific language. They utilize keywords provided
+...               by the imported Selenium2Library.
+Library           Selenium2Library
+
+*** Variables ***
+${SERVER}          10.10.10.10:7001
+${BROWSER}         Chrome
+${DELAY}           0
+${VALID USER}      weblogic
+${VALID PASSWORD}  weblogic1
+${LOGIN URL}       http://${SERVER}/console/login/LoginForm.jsp
+${ERROR URL}       http://${SERVER}/console/login/LoginForm.jsp
+${WELCOME URL}     http://${SERVER}/console/console.portal?_nfpb=true&_pageLabel=HomePage1
+
+*** Keywords ***
+Open Browser To Login Page
+    Open Browser    ${LOGIN URL}    ${BROWSER}
+    Maximize Browser Window
+    Set Selenium Speed    ${DELAY}
+    Login Page Should Be Open
+
+Login Page Should Be Open
+    Title Should Be    Oracle WebLogic Server Administration Console
+
+Go To Login Page
+    Go To    ${LOGIN URL}
+    Login Page Should Be Open
+
+Input Username
+    [Arguments]    ${username}
+    Input Text    j_username    ${username}
+
+Input Password
+    [Arguments]    ${password}
+    Input Text    j_password    ${password}
+
+Submit Credentials
+    Click Button    Login
+
+Welcome Page Should Be Open
+    Location Should Be    ${WELCOME URL}
+    Title Should Be    Home Page - Wls1213 - WLS Console

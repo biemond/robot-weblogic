@@ -1,0 +1,59 @@
+*** Settings ***
+Resource        resource.txt
+
+Suite Teardown  Delete All Sessions
+
+*** Test Cases ***
+Unauthorized
+  [Tags]  authentication
+  Start a new session, use this url /12.1.3.0 and the returned statuscode should be 401
+
+Authenticated
+  [Tags]  authentication
+  Start a new authenticated session, use this url /12.1.3.0 and the returned statuscode should be 200
+
+WebLogic Domain Service Health
+  [Tags]  status
+  ${jsondata}=  Open the following url /12.1.3.0
+
+  Find attribute state and expect this ok as value in this map ${jsondata['item']['overallServiceHealth']}
+
+State of the AdminServer
+  [Tags]  status
+  ${jsondata}=  Open the following url /12.1.3.0/servers/id/AdminServer
+
+  Find attribute state and expect this ok as value in this map ${jsondata['item']['health']}
+
+  Find attribute name and expect this AdminServer as value in this map ${jsondata['item']}
+
+  Find attribute state and expect this running as value in this map ${jsondata['item']}
+
+Total WebLogic Server Count
+  [Tags]  status
+  ${jsondata}=  Open the following url /12.1.3.0/servers?rel=current
+  Length Should Be  ${jsondata['items']}  3  Expected 3 managed servers
+  :FOR              ${item}               IN    @{jsondata['items']}
+  \  Log            ${item}
+
+Should Contain JAX-RS Library
+  [Tags]  deployments
+  ${jsondata}=  Open the following url /12.1.3.0/deployments/library/id/jax-rs%232.0@2.5.1
+
+  Find attribute state and expect this active as value in this map ${jsondata['item']}
+
+  Should Contain  ${jsondata['item']['targets']}  WebCluster
+
+
+AdminServer state the hard way
+  [Tags]  status
+  ${headers}=     Create Dictionary  Accept                                  application/json
+  ${auth}=        Create List        Weblogic                                weblogic1
+  Create Session  session100         http://10.10.10.10:7001/management/wls  auth=${auth}   headers=${headers}
+  ${response}=    Get                session2                                /12.1.3.0/servers/id/AdminServer
+  Should Be Equal As numbers         ${response.status_code}                 200
+  ${jsondata}=    To Json            ${response.content}
+  Log                                ${response.content}
+  Dictionary Should Contain Key      ${jsondata['item']['health']}           state
+  ${result}=  Get From Dictionary    ${jsondata['item']['health']}           state
+  Should Be Equal As strings         ${result}                               ok
+

@@ -1,0 +1,34 @@
+*** Settings ***
+Library         Collections
+Library         RequestsLibrary
+
+*** Variables ***
+${SERVER}          http://10.10.10.10:7001/management/wls
+${VALID USER}      weblogic
+${VALID PASSWORD}  weblogic1
+
+
+*** Keywords ***
+Start a new session, use this url ${url} and the returned statuscode should be ${statuscode}
+  Create Session  session1    ${SERVER}
+  ${response}=  Get           session1                  ${url}
+  Should Be Equal As numbers  ${response.status_code}   ${statuscode}  Expected a status code of ${statuscode} but got ${response.status_code}
+
+Start a new authenticated session, use this url ${url} and the returned statuscode should be ${statuscode}
+  ${headers}=     Create Dictionary  Accept                    application/json
+  ${auth}=        Create List        ${VALID USER}             ${VALID PASSWORD}
+  Create Session  session2           ${SERVER}                 auth=${auth}   headers=${headers}
+  ${response}=    Get                session2                  ${url}
+  Should Be Equal As numbers         ${response.status_code}   ${statuscode}  Expected a status code of ${statuscode} but got ${response.status_code}
+  [return]                           ${response}
+
+Open the following url ${url}
+  ${response}=    Start a new authenticated session, use this url ${url} and the returned statuscode should be 200
+  ${jsondata}=    To Json   ${response.content}
+  Log                       ${response.content}
+  [return]                  ${jsondata}
+
+Find attribute ${key} and expect this ${value} as value in this map ${map}
+    Dictionary Should Contain Key    ${map}     ${key}
+    ${result}=  Get From Dictionary  ${map}     ${key}
+    Should Be Equal As strings       ${result}  ${value}

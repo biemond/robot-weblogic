@@ -1,0 +1,11 @@
+*** Settings ***
+Resource          resource.txt
+
+*** Test Cases ***
+Valid Login
+  Open Browser To Login Page
+  Input Username    weblogic
+  Input Password    weblogic1
+  Submit Credentials
+  Welcome Page Should Be Open
+  [Teardown]        Close Browser
